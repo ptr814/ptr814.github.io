@@ -48,8 +48,7 @@ bqplot
 
 
 # for TMF8829 logging tool tmf8829_zeromq_client.py
-packages\aos_com-1.0.19-py3-none-any.whl
-packages\corefw_c-2.2.1-cp38-abi3-win_amd64.whl
+packages/aos_com-1.0.19-py3-none-any.whl
 pyserial
 intelhex
 matplotlib

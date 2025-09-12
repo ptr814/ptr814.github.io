@@ -3,6 +3,15 @@
 JupyterLite deployed as a static site to GitHub Pages, for demo purposes. Used https://github.com/jupyterlite/demo as template and modified:
 
 - Added terminal program - https://github.com/jupyterlite/terminal
+- Tried to install TMF8829 Logger
+    - Removed 'Requires-Dist: corefw_c' in aos_com-1.0.19.dist-info/METADATA wheel
+    - Failed with installation of package 'pyzmq' inside Jupyterlite
+ 
+```python
+%pip install pyzmq
+```
+
+Caused error "Can’t find a pure Python 3 wheel for a package pyzmq" as pyzmq use libzmq (C++).
 
 ## ✨ Try it in your browser ✨
 
