@@ -3,8 +3,8 @@ jupyterlite-core==0.6.4
 jupyterlab~=4.4.5
 notebook~=7.4.5
 
-# git
-jupyterlab-git
+# git - version 0.30.0 https://github.com/jupyterlab/jupyterlab/issues/9461
+jupyterlab-git=0.30.0
 
 # terminal
 jupyterlite-terminal
