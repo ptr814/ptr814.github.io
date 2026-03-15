@@ -18,7 +18,7 @@ import time
 import json
 import csv
 import gzip
-from tkinter import filedialog as tk_fd
+# from tkinter import filedialog as tk_fd # not available in JupyterLite
 
 histogram_counter = 0
 
