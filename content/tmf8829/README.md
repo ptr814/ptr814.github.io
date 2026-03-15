@@ -51,5 +51,4 @@ Create a JupyterLite file and replace 'tmf8829_log_1770799073' with your actual 
 and open the created html file *tmf8829_log_1770799073._viewer.html* inside JupyterLite
 and allow 'Trust HTML':
 
-![image](https://raw.githubusercontent.com/ams-OSRAM/tmf8829_json_logfile_viewer/refs/heads/main/media/operation_jupyterlab.png)
-
+![image](https://raw.githubusercontent.com//ptr814/ptr814.github.io/refs/heads/main/content/media/operation_jupyterlite.jpg)
