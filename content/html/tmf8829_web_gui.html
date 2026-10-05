@@ -446,6 +446,13 @@ canvas {
 #pointCloud.dragging { cursor: grabbing; }
 #handCanvas { cursor: pointer; }
 
+/* Room for two hands so the layout does not jump. */
+#handFingertips {
+  line-height: 1.5;
+  min-height: 3em;
+  white-space: pre-line;
+}
+
 .panel-column .panel,
 .view .panel {
   animation: panel-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
@@ -670,9 +677,9 @@ canvas {
           <input id="handZMin" type="number" value="50" min="0" max="10000" step="10">
           <label for="handZMax">Max (mm)</label>
           <input id="handZMax" type="number" value="550" min="0" max="10000" step="10">
-          <span id="handFingertips" class="info-line"></span>
         </div>
         <canvas id="handCanvas" width="800" height="600" title="Click to toggle hand detection"></canvas>
+        <p id="handFingertips" class="info-line"></p>
         <p class="hint">Use the 48x32 configuration with <strong>Signal</strong> enabled and a hand within the range above.
           Uses MediaPipe and the hand landmarker model (Google, Apache 2.0, see <code>mediapipe/LICENSE</code>), loaded from <code>mediapipe/tmf8829_hand_assets.js</code> next to this page.</p>
       </div>
@@ -3263,6 +3270,29 @@ function drawText(context, text, x, y, color, size) {
   context.fillText(text, x, y);
 }
 
+/** MediaPipe feeds images through WebGL even on the CPU delegate, so a WebGL-capable canvas is required. */
+function createWebGLCanvas() {
+  const candidates = [];
+  if (typeof OffscreenCanvas !== 'undefined') candidates.push(() => new OffscreenCanvas(1, 1));
+  candidates.push(() => document.createElement('canvas'));
+  for (const create of candidates) {
+    try {
+      const probe = create();
+      const gl = probe.getContext('webgl2') || probe.getContext('webgl');
+      if (gl) {
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
+        return create();
+      }
+    } catch {
+      // Try the next canvas type.
+    }
+  }
+  throw new Error(
+    'WebGL is not available in this browser. Enable hardware acceleration ' +
+      '(chrome://settings/system) and check chrome://gpu for WebGL status.',
+  );
+}
+
 class HandDetector {
   constructor({ onLog = () => {} } = {}) {
     this.onLog = onLog;
@@ -3277,6 +3307,7 @@ class HandDetector {
     if (!this.loading) {
       this.onLog('Loading MediaPipe hand landmarker...');
       this.loading = (async () => {
+        const glCanvas = createWebGLCanvas();
         await loadClassicScript(HAND_ASSETS_URL);
         const assets = window.TMF8829_HAND_ASSETS;
         delete window.TMF8829_HAND_ASSETS;
@@ -3289,6 +3320,7 @@ class HandDetector {
             baseOptions: { modelAssetBuffer: base64ToBytes(assets.model) },
             numHands: 2,
             runningMode: 'VIDEO',
+            canvas: glCanvas,
           },
         );
         this.onLog('Hand landmarker ready');
@@ -3359,7 +3391,14 @@ class HandDetector {
       drawText(context, 'Loading hand model...', 50, 100, INFO_COLOR, 28);
     } else {
       this.lastTimestamp = Math.max(performance.now(), this.lastTimestamp + 1);
-      const detection = this.landmarker.detectForVideo(canvas, this.lastTimestamp);
+      let detection;
+      try {
+        detection = this.landmarker.detectForVideo(canvas, this.lastTimestamp);
+      } catch (error) {
+        this.error = error;
+        this.onLog(`Hand detection failed: ${error.message}`);
+        detection = {};
+      }
       result.hands = detection.landmarks?.length ?? 0;
       for (const landmarks of detection.landmarks ?? []) {
         if (this.drawHand(context, landmarks)) result.pinch = true;
@@ -5394,7 +5433,7 @@ class Application {
     const formatXYZ = (p) => (p ? `(${p.x}, ${p.y}, ${p.z})` : '(-)');
     $('handFingertips').textContent = result.fingertips
       .map((tips) => `Thumb ${formatXYZ(tips.thumb)} | Index ${formatXYZ(tips.index)} mm`)
-      .join('; ');
+      .join('\n');
   }
 
   updatePointCloud() {
